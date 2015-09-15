@@ -229,7 +229,7 @@ contract CentralBank is Minter {
             return unchanged(_banknote);
         }
 
-        // assert msg.sender == banknote.holder.
+        /* assert msg.sender == banknote.holder. */
 
         uint256 length = _faceValues.length;
 
