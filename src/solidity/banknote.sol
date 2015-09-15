@@ -158,6 +158,10 @@ contract CentralBank is Minter {
 
     function destroy(address _banknote) public returns (bool success) {
 
+        if (!genuine(_banknote)) {
+            return false;
+        }
+
         Banknote banknote = Banknote(_banknote);
 
         /*
@@ -193,6 +197,10 @@ contract CentralBank is Minter {
         }
     }
 
+    function genuine(address _banknote) public returns (bool yes) {
+        return banknotes[_banknote] != 0;
+    }
+
     function issue(uint256 _faceValue, address _holder) onlyowner public returns (address _banknote) {
         address fresh = print(_faceValue);
 
@@ -206,6 +214,10 @@ contract CentralBank is Minter {
     }
 
     function change(address _banknote, uint256[] _faceValues) public returns (address[]) {
+
+        if (!genuine(_banknote)) {
+            return unchanged(_banknote);
+        }
 
         Banknote banknote = Banknote(_banknote);
         uint256 faceValue = banknote.faceValue();
