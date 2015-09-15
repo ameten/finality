@@ -143,7 +143,7 @@ contract CentralBank is Minter {
     /*
         Keeps all minted banknotes and their face values.
     */
-    mapping (address => uint256) banknotes;
+    mapping (address => uint256) private banknotes;
 
     function print(uint256 _faceValue) private returns (address _banknote) {
 
@@ -290,8 +290,4 @@ contract CentralBank is Minter {
         unchanged[0] = _banknote;
         return unchanged;
     }
-}
-
-contract Exchange is Mortal {
-
 }
