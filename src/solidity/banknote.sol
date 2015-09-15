@@ -25,6 +25,10 @@ contract Owned {
     }
 }
 
+contract Killable {
+    function kill() public returns (bool success);
+}
+
 contract Mortal is Owned {
 
     function kill() onlyowner public returns (bool success) {
@@ -37,7 +41,7 @@ contract Minter is Mortal {
 
     uint256 private supply;
 
-    function mint(uint256 amount) onlyowner public returns (bool success) {
+    function mint(uint256 amount) internal returns (bool success) {
 
         uint256 temp = supply + amount;
         if (temp < supply) {
@@ -48,7 +52,7 @@ contract Minter is Mortal {
         return true;
     }
 
-    function unmint(uint256 amount) onlyowner public returns (bool success) {
+    function unmint(uint256 amount) internal returns (bool success) {
         if (supply < amount) {
             return false;
         }
@@ -66,17 +70,17 @@ contract Minter is Mortal {
     }
 }
 
-/*
-    Although banknote is mortal, it can be destroy only by issuer.
-*/
-contract Banknote is Mortal {
+contract Banknote is Killable {
 
-    uint256 public faceValue;
+    address public issuer;
     address private holder;
 
-    function Banknote(uint256 _faceValue) {
+    uint256 public faceValue;
+
+    function Banknote(address _issuer, uint256 _faceValue) {
+        issuer = _issuer;
         faceValue = _faceValue;
-        holder = msg.sender;
+        holder = _issuer;
     }
 
     function transfer(address to) public returns (bool success) {
@@ -92,22 +96,45 @@ contract Banknote is Mortal {
         /*
             If banknote is returned to central bank, destroy it.
         */
-        if (holder == owner) {
-            CentralBank centralBank = CentralBank(owner);
+        if (holder == issuer) {
+            CentralBank centralBank = CentralBank(issuer);
             centralBank.destroy(this);
         }
+    }
+
+    function change(uint256[] _faceValues) public returns (address[]) {
+
+        /*
+            Prevent change banknotes which don't belong to transaction sender.
+        */
+        if (msg.sender != holder) {
+            address[] unchanged;
+            unchanged.length = 1;
+            unchanged[0] = this;
+            return unchanged;
+        }
+
+        holder = issuer;
+
+        CentralBank centralBank = CentralBank(issuer);
+        centralBank.change(this, _faceValues);
     }
 
     function mine() public returns (bool yes) {
         return holder == msg.sender;
     }
 
-    function issuer() public returns (address _address) {
-        return owner;
+    function returned() public returns (bool yes) {
+        return issuer == holder;
     }
 
-    function returned() public returns (bool yes) {
-        return owner == holder;
+    function kill() public returns (bool) {
+        if (!returned()) {
+            return false;
+        }
+
+        suicide(issuer);
+        return true;
     }
 }
 
@@ -118,13 +145,13 @@ contract CentralBank is Minter {
     */
     mapping (address => uint256) banknotes;
 
-    function print(uint256 _faceValue) onlyowner private returns (address _banknote) {
+    function print(uint256 _faceValue) private returns (address _banknote) {
 
         if (!super.mint(_faceValue)) {
             return 0;
         }
 
-        Banknote banknote = new Banknote(_faceValue);
+        Banknote banknote = new Banknote(this, _faceValue);
         banknotes[banknote] = _faceValue;
         return banknote;
     }
@@ -156,7 +183,17 @@ contract CentralBank is Minter {
         return true;
     }
 
-    function issue(uint256 _faceValue, address _holder) onlyowner returns (address _banknote) {
+    function destroy(address[] _banknotes) public returns (bool success) {
+        for (uint256 i = 0; i < _banknotes.length; ++i) {
+            address banknote = _banknotes[i];
+
+            if (banknote != 0) {
+                destroy(banknote);
+            }
+        }
+    }
+
+    function issue(uint256 _faceValue, address _holder) onlyowner public returns (address _banknote) {
         address fresh = print(_faceValue);
 
         if (fresh == 0) {
@@ -167,4 +204,82 @@ contract CentralBank is Minter {
         banknote.transfer(_holder);
         return banknote;
     }
+
+    function change(address _banknote, uint256[] _faceValues) public returns (address[]) {
+
+        Banknote banknote = Banknote(_banknote);
+        uint256 faceValue = banknote.faceValue();
+
+        /*
+            Only banknote holder can ask for change.
+        */
+        if (!banknote.mine()) {
+            return unchanged(_banknote);
+        }
+
+        // assert msg.sender == banknote.holder.
+
+        uint256 length = _faceValues.length;
+
+        uint256 sum = 0;
+        for (uint256 i = 0; i < length; ++i) {
+            sum += _faceValues[i];
+        }
+
+        if (sum > faceValue) {
+            return unchanged(_banknote);
+        }
+
+        uint256 reminder = faceValue - sum;
+
+        if (!destroy(_banknote)) {
+            banknote.transfer(msg.sender);
+            return unchanged(_banknote);
+        }
+
+        address[] banknotes;
+
+        if (reminder == 0) {
+            banknotes.length = _faceValues.length;
+        } else {
+            banknotes.length = _faceValues.length + 1;
+        }
+
+        for (uint256 j = 0; j < length; ++j) {
+            address hot = print(_faceValues[j]);
+
+            if (hot == 0) {
+                destroy(banknotes);
+                banknote.transfer(msg.sender);
+                return unchanged(_banknote);
+            }
+
+            banknotes[j] = hot;
+        }
+
+        if (reminder != 0) {
+            address hotter = print(reminder);
+
+            if (hotter == 0) {
+                destroy(banknotes);
+                banknote.transfer(msg.sender);
+                return unchanged(_banknote);
+            }
+
+            banknotes[_faceValues.length] = hotter;
+        }
+
+        return banknotes;
+    }
+
+    function unchanged(address _banknote) private returns (address[] _unchanged) {
+        address[] unchanged;
+        unchanged.length = 1;
+        unchanged[0] = _banknote;
+        return unchanged;
+    }
+}
+
+contract Exchange is Mortal {
+
 }
