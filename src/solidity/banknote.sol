@@ -95,11 +95,9 @@ contract Banknote is Killable {
     uint256 public faceValue;
 
     function Banknote(address _issuer, uint256 _faceValue) public {
-        BanknoteEvent(msg.sender, 300);
         issuer = _issuer;
         faceValue = _faceValue;
         holder = _issuer;
-        BanknoteEvent(msg.sender, 301);
     }
 
     function transfer(address to) public returns (bool success) {
@@ -139,11 +137,16 @@ contract Banknote is Killable {
         centralBank.change(this, _faceValues);
     }
 
-    function mine() public returns (bool yes) {
+    function mine() constant public returns (bool yes) {
+        BanknoteEvent(msg.sender, 300);
+        BanknoteEvent(holder, 301);
         return holder == msg.sender;
     }
 
-    function returned() public returns (bool yes) {
+    function returned() constant public returns (bool yes) {
+        BanknoteEvent(msg.sender, 302);
+        BanknoteEvent(holder, 303);
+        BanknoteEvent(issue, 304);
         return issuer == holder;
     }
 
