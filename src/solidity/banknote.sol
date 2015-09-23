@@ -41,14 +41,22 @@ contract Minter is Mortal {
 
     uint256 private supply;
 
+    event MinterEvent(address from, uint256 id, uint256 supply);
+
     function mint(uint256 amount) internal returns (bool success) {
+
+        MinterEvent(msg.sender, 100, supply);
 
         uint256 temp = supply + amount;
         if (temp < supply) {
+            MinterEvent(msg.sender, 101, supply);
             return false;
         }
 
         supply = temp;
+
+        MinterEvent(msg.sender, 102, supply);
+
         return true;
     }
 
@@ -72,15 +80,19 @@ contract Minter is Mortal {
 
 contract Banknote is Killable {
 
+    event BanknoteEvent(address from, uint256 id);
+
     address public issuer;
     address private holder;
 
     uint256 public faceValue;
 
-    function Banknote(address _issuer, uint256 _faceValue) {
+    function Banknote(address _issuer, uint256 _faceValue) public {
+        BanknoteEvent(msg.sender, 300);
         issuer = _issuer;
         faceValue = _faceValue;
         holder = _issuer;
+        BanknoteEvent(msg.sender, 301);
     }
 
     function transfer(address to) public returns (bool success) {
@@ -145,14 +157,33 @@ contract CentralBank is Minter {
     */
     mapping (address => uint256) private banknotes;
 
+    event CentralBankEvent(address from, uint256 id);
+
+    uint256 temp;
+
+    function tempo() constant returns (uint256 val) {
+        return temp;
+    }
+
     function print(uint256 _faceValue) private returns (address _banknote) {
 
+        CentralBankEvent(msg.sender, 200);
+
         if (!super.mint(_faceValue)) {
+            CentralBankEvent(msg.sender, 201);
             return 0;
         }
 
-        Banknote banknote = new Banknote(this, _faceValue);
+        CentralBankEvent(msg.sender, 202);
+
+        Banknote banknote = new Banknote(msg.sender, _faceValue);
+
+        CentralBankEvent(msg.sender, 203);
+
         banknotes[banknote] = _faceValue;
+
+        CentralBankEvent(msg.sender, 204);
+
         return banknote;
     }
 
@@ -197,19 +228,31 @@ contract CentralBank is Minter {
         }
     }
 
-    function genuine(address _banknote) public returns (bool yes) {
+    function genuine(address _banknote) constant public returns (bool yes) {
         return banknotes[_banknote] != 0;
     }
 
     function issue(uint256 _faceValue, address _holder) onlyowner public returns (address _banknote) {
+
+        CentralBankEvent(msg.sender, 205);
+
         address fresh = print(_faceValue);
 
+        CentralBankEvent(msg.sender, 206);
+
         if (fresh == 0) {
+            CentralBankEvent(msg.sender, 207);
             return 0;
         }
 
         Banknote banknote = Banknote(fresh);
+
+        CentralBankEvent(msg.sender, 208);
+
         banknote.transfer(_holder);
+
+        CentralBankEvent(msg.sender, 209);
+
         return banknote;
     }
 
