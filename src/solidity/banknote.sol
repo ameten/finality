@@ -16,12 +16,19 @@ contract Owned {
 
     address internal owner;
 
+    event OwnedEvent(address from, uint256 id);
+
     function Owned() {
+        OwnedEvent(msg.sender, 600);
         owner = msg.sender;
     }
 
     modifier onlyowner {
-        if (msg.sender == owner) _
+        OwnedEvent(msg.sender, 601);
+        if (msg.sender == owner) {
+            OwnedEvent(owner, 602);
+            _
+        }
     }
 }
 
@@ -158,12 +165,6 @@ contract CentralBank is Minter {
     mapping (address => uint256) private banknotes;
 
     event CentralBankEvent(address from, uint256 id);
-
-    uint256 temp;
-
-    function tempo() constant returns (uint256 val) {
-        return temp;
-    }
 
     function print(uint256 _faceValue) private returns (address _banknote) {
 
