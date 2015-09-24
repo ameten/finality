@@ -16,17 +16,17 @@ contract Owned {
 
     address internal owner;
 
-    event OwnedEvent(address from, uint256 id);
+    event OwnedEvent(address from, uint256 mode, uint256 id);
 
     function Owned() {
-        OwnedEvent(msg.sender, 600);
+        OwnedEvent(msg.sender, 6, 0);
         owner = msg.sender;
     }
 
     modifier onlyowner {
-        OwnedEvent(msg.sender, 601);
+        OwnedEvent(msg.sender, 6, 1);
         if (msg.sender == owner) {
-            OwnedEvent(owner, 602);
+            OwnedEvent(owner, 6, 2);
             _
         }
     }
@@ -48,21 +48,21 @@ contract Minter is Mortal {
 
     uint256 private supply;
 
-    event MinterEvent(address from, uint256 id, uint256 supply);
+    event MinterEvent(address from, uint256 mode, uint256 id, uint256 supply);
 
     function mint(uint256 amount) internal returns (bool success) {
 
-        MinterEvent(msg.sender, 100, supply);
+        MinterEvent(msg.sender, 1, 0, supply);
 
         uint256 temp = supply + amount;
         if (temp < supply) {
-            MinterEvent(msg.sender, 101, supply);
+            MinterEvent(msg.sender, 1, 1, supply);
             return false;
         }
 
         supply = temp;
 
-        MinterEvent(msg.sender, 102, supply);
+        MinterEvent(msg.sender, 1, 2, supply);
 
         return true;
     }
@@ -87,7 +87,7 @@ contract Minter is Mortal {
 
 contract Banknote is Killable {
 
-    event BanknoteEvent(address from, uint256 id);
+    event BanknoteEvent(address from, uint256 mode, uint256 id);
 
     address public issuer;
     address private holder;
@@ -138,15 +138,15 @@ contract Banknote is Killable {
     }
 
     function mine() constant public returns (bool yes) {
-        BanknoteEvent(msg.sender, 300);
-        BanknoteEvent(holder, 301);
+        BanknoteEvent(msg.sender, 3, 0);
+        BanknoteEvent(holder, 3, 1);
         return holder == msg.sender;
     }
 
     function returned() constant public returns (bool yes) {
-        BanknoteEvent(msg.sender, 302);
-        BanknoteEvent(holder, 303);
-        BanknoteEvent(issue, 304);
+        BanknoteEvent(msg.sender, 3, 2);
+        BanknoteEvent(holder, 3, 3);
+        BanknoteEvent(issuer, 3, 4);
         return issuer == holder;
     }
 
@@ -167,26 +167,26 @@ contract CentralBank is Minter {
     */
     mapping (address => uint256) private banknotes;
 
-    event CentralBankEvent(address from, uint256 id);
+    event CentralBankEvent(address from, uint256 mode, uint256 id);
 
     function print(uint256 _faceValue) private returns (address _banknote) {
 
-        CentralBankEvent(msg.sender, 200);
+        CentralBankEvent(msg.sender, 2, 0);
 
         if (!super.mint(_faceValue)) {
-            CentralBankEvent(msg.sender, 201);
+            CentralBankEvent(msg.sender, 2, 1);
             return 0;
         }
 
-        CentralBankEvent(msg.sender, 202);
+        CentralBankEvent(msg.sender, 2, 2);
 
         Banknote banknote = new Banknote(msg.sender, _faceValue);
 
-        CentralBankEvent(msg.sender, 203);
+        CentralBankEvent(msg.sender, 2, 3);
 
         banknotes[banknote] = _faceValue;
 
-        CentralBankEvent(msg.sender, 204);
+        CentralBankEvent(msg.sender, 2, 4);
 
         return banknote;
     }
@@ -238,24 +238,24 @@ contract CentralBank is Minter {
 
     function issue(uint256 _faceValue, address _holder) onlyowner public returns (address _banknote) {
 
-        CentralBankEvent(msg.sender, 205);
+        CentralBankEvent(msg.sender, 2, 5);
 
         address fresh = print(_faceValue);
 
-        CentralBankEvent(msg.sender, 206);
+        CentralBankEvent(msg.sender, 2, 6);
 
         if (fresh == 0) {
-            CentralBankEvent(msg.sender, 207);
+            CentralBankEvent(msg.sender, 2, 7);
             return 0;
         }
 
         Banknote banknote = Banknote(fresh);
 
-        CentralBankEvent(msg.sender, 208);
+        CentralBankEvent(msg.sender, 2, 8);
 
         banknote.transfer(_holder);
 
-        CentralBankEvent(msg.sender, 209);
+        CentralBankEvent(msg.sender, 2, 9);
 
         return banknote;
     }
