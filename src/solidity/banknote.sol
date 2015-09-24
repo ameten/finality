@@ -183,6 +183,7 @@ contract CentralBank is Minter {
         Banknote banknote = new Banknote(msg.sender, _faceValue);
 
         CentralBankEvent(msg.sender, 2, 3);
+        CentralBankEvent(banknote, 2, 3);
 
         banknotes[banknote] = _faceValue;
 
