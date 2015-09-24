@@ -94,26 +94,38 @@ contract Banknote is Killable {
 
     uint256 public faceValue;
 
-    function Banknote(address _issuer, uint256 _faceValue) public {
+    function Banknote(address _issuer, address _holder, uint256 _faceValue) public {
         issuer = _issuer;
         faceValue = _faceValue;
-        holder = _issuer;
+        holder = _holder;
     }
 
     function transfer(address to) public returns (bool success) {
+
+        BanknoteEvent(msg.sender, 3, 5);
+        BanknoteEvent(holder, 3, 5);
+        BanknoteEvent(issuer, 3, 5);
+        BanknoteEvent(to, 3, 5);
         /*
             Prevent transfer banknotes which don't belong to transaction sender.
         */
         if (msg.sender != holder) {
+            BanknoteEvent(msg.sender, 3, 6);
             return false;
         }
 
         holder = to;
 
+        BanknoteEvent(msg.sender, 3, 7);
+        BanknoteEvent(holder, 3, 7);
+        BanknoteEvent(issuer, 3, 7);
+        BanknoteEvent(to, 3, 7);
+
         /*
             If banknote is returned to central bank, destroy it.
         */
         if (holder == issuer) {
+            BanknoteEvent(msg.sender, 3, 8);
             CentralBank centralBank = CentralBank(issuer);
             centralBank.destroy(this);
         }
@@ -134,7 +146,7 @@ contract Banknote is Killable {
         holder = issuer;
 
         CentralBank centralBank = CentralBank(issuer);
-        centralBank.change(this, _faceValues);
+        return centralBank.change(this, _faceValues);
     }
 
     function mine() public returns (bool yes) {
@@ -180,7 +192,7 @@ contract CentralBank is Minter {
 
         CentralBankEvent(msg.sender, 2, 2);
 
-        Banknote banknote = new Banknote(msg.sender, _faceValue);
+        Banknote banknote = new Banknote(this, msg.sender, _faceValue);
 
         CentralBankEvent(msg.sender, 2, 3);
         CentralBankEvent(banknote, 2, 3);
