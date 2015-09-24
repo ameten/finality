@@ -103,23 +103,27 @@ contract Banknote is Killable {
     function transfer(address to) public returns (bool success) {
 
         logging(2);
+        BanknoteEvent(to, 3, 2);
         /*
             Prevent transfer banknotes which don't belong to transaction sender.
         */
         if (msg.sender != holder) {
             logging(3);
+            BanknoteEvent(to, 3, 3);
             return false;
         }
 
         holder = to;
 
         logging(4);
+        BanknoteEvent(to, 3, 4);
 
         /*
             If banknote is returned to central bank, destroy it.
         */
         if (holder == issuer) {
             logging(5);
+            BanknoteEvent(to, 3, 5);
             CentralBank centralBank = CentralBank(issuer);
             centralBank.destroy(this);
         }
@@ -186,7 +190,6 @@ contract Banknote is Killable {
         BanknoteEvent(msg.sender, 3, _id);
         BanknoteEvent(holder, 3, _id);
         BanknoteEvent(issuer, 3, _id);
-        BanknoteEvent(to, 3, _id);
     }
 }
 
