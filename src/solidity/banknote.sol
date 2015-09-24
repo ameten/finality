@@ -137,13 +137,13 @@ contract Banknote is Killable {
         centralBank.change(this, _faceValues);
     }
 
-    function mine() constant public returns (bool yes) {
+    function mine() public returns (bool yes) {
         BanknoteEvent(msg.sender, 3, 0);
         BanknoteEvent(holder, 3, 1);
         return holder == msg.sender;
     }
 
-    function returned() constant public returns (bool yes) {
+    function returned() public returns (bool yes) {
         BanknoteEvent(msg.sender, 3, 2);
         BanknoteEvent(holder, 3, 3);
         BanknoteEvent(issuer, 3, 4);
