@@ -102,30 +102,24 @@ contract Banknote is Killable {
 
     function transfer(address to) public returns (bool success) {
 
-        BanknoteEvent(msg.sender, 3, 5);
-        BanknoteEvent(holder, 3, 5);
-        BanknoteEvent(issuer, 3, 5);
-        BanknoteEvent(to, 3, 5);
+        logging(2);
         /*
             Prevent transfer banknotes which don't belong to transaction sender.
         */
         if (msg.sender != holder) {
-            BanknoteEvent(msg.sender, 3, 6);
+            logging(3);
             return false;
         }
 
         holder = to;
 
-        BanknoteEvent(msg.sender, 3, 7);
-        BanknoteEvent(holder, 3, 7);
-        BanknoteEvent(issuer, 3, 7);
-        BanknoteEvent(to, 3, 7);
+        logging(4);
 
         /*
             If banknote is returned to central bank, destroy it.
         */
         if (holder == issuer) {
-            BanknoteEvent(msg.sender, 3, 8);
+            logging(5);
             CentralBank centralBank = CentralBank(issuer);
             centralBank.destroy(this);
         }
@@ -133,44 +127,66 @@ contract Banknote is Killable {
 
     function change(uint256[] _faceValues) public returns (address[]) {
 
+        logging(10);
+
         /*
             Prevent change banknotes which don't belong to transaction sender.
         */
         if (msg.sender != holder) {
+            logging(11);
+
             address[] unchanged;
             unchanged.length = 1;
             unchanged[0] = this;
             return unchanged;
         }
 
+        logging(12);
+
         holder = issuer;
+
+        logging(13);
 
         CentralBank centralBank = CentralBank(issuer);
 
+        logging(14);
+
         /* array of addresses cannot be returned (?) */
         centralBank.change(this, _faceValues);
+
+        logging(15);
     }
 
     function mine() public returns (bool yes) {
-        BanknoteEvent(msg.sender, 3, 0);
-        BanknoteEvent(holder, 3, 1);
+        logging(0);
         return holder == msg.sender;
     }
 
     function returned() public returns (bool yes) {
-        BanknoteEvent(msg.sender, 3, 2);
-        BanknoteEvent(holder, 3, 3);
-        BanknoteEvent(issuer, 3, 4);
+        logging(1);
         return issuer == holder;
     }
 
     function kill() public returns (bool) {
+        logging(6);
         if (!returned()) {
+            logging(7);
             return false;
         }
 
+        logging(8);
         suicide(issuer);
+
+        logging(9);
         return true;
+    }
+
+    function logging(uint256 _id) private {
+        BanknoteEvent(this, 3, _id);
+        BanknoteEvent(msg.sender, 3, _id);
+        BanknoteEvent(holder, 3, _id);
+        BanknoteEvent(issuer, 3, _id);
+        BanknoteEvent(to, 3, _id);
     }
 }
 
