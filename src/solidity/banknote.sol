@@ -146,7 +146,9 @@ contract Banknote is Killable {
         holder = issuer;
 
         CentralBank centralBank = CentralBank(issuer);
-        return centralBank.change(this, _faceValues);
+
+        /* array of addresses cannot be returned (?) */
+        centralBank.change(this, _faceValues);
     }
 
     function mine() public returns (bool yes) {
