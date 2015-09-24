@@ -94,10 +94,10 @@ contract Banknote is Killable {
 
     uint256 public faceValue;
 
-    function Banknote(address _issuer, address _holder, uint256 _faceValue) public {
-        issuer = _issuer;
+    function Banknote(address _centralBank, uint256 _faceValue) public {
+        issuer = _centralBank;
+        holder = _centralBank;
         faceValue = _faceValue;
-        holder = _holder;
     }
 
     function transfer(address to) public returns (bool success) {
@@ -213,7 +213,7 @@ contract CentralBank is Minter {
 
         CentralBankEvent(msg.sender, 2, 2);
 
-        Banknote banknote = new Banknote(this, msg.sender, _faceValue);
+        Banknote banknote = new Banknote(this, _faceValue);
 
         CentralBankEvent(msg.sender, 2, 3);
         CentralBankEvent(banknote, 2, 3);
